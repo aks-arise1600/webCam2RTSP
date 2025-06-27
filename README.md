@@ -1,5 +1,5 @@
 # webCam2RTSP
-Webcam/USBcam stream as RTSP. This is a simple rtsp sever that streaming web-cam or usb-cam.
+Webcam/USBcam stream convert as RTSP stream. This is a simple rtsp sever that streaming web-cam or usb-cam.
 
 ## Dependencies
 1. [Gstreamer](https://gstreamer.freedesktop.org/)
