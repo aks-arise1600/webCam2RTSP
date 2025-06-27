@@ -60,13 +60,13 @@ int main(int argc, char *argv[]) {
 
         // ---------- Run Server ----------
         gst_rtsp_server_attach(server, NULL);
-        g_print("RTSP stream with auth ready at rtsp://admin:password@<IP>:8554/cam\n");
+        g_print("RTSP stream with auth ready at rtsp://admin:password@<IP>:8554/webcam\n");
 
         GMainLoop *loop = g_main_loop_new(NULL, FALSE);
         g_main_loop_run(loop);
 
         // Receiver
-        // gst-launch-1.0 rtspsrc location=rtsp://admin:password@<IP>:8554/cam latency=0 ! decodebin ! autovideosink
+        // gst-launch-1.0 rtspsrc location=rtsp://admin:password@<IP>:8554/webcam latency=0 ! decodebin ! autovideosink
     }
     catch(QException &exp)
     {
