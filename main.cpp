@@ -4,10 +4,51 @@
 #include <gst/gst.h>
 #include <gst/rtsp-server/rtsp-server.h>
 
+#include <ifaddrs.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 #define SERVER_PORT     "8554"
 #define USER_ID         "admin"
 #define USER_PASSCODE   "password"
 #define MOUNT_POINTS    "/webcam"
+
+void m_GetIPaddress()
+{
+    struct ifaddrs *interfaces = nullptr;
+    struct ifaddrs *ifa = nullptr;
+
+    if (getifaddrs(&interfaces) == -1) {
+        perror("getifaddrs");
+        return ;
+    }
+
+    for (ifa = interfaces; ifa != nullptr; ifa = ifa->ifa_next) {
+        if (!ifa->ifa_addr) continue;
+
+        // Skip if interface name contains "docker"
+        std::string ifname(ifa->ifa_name);
+        if (ifname.find("docker") != std::string::npos) continue;
+
+        int family = ifa->ifa_addr->sa_family;
+
+        if (family == AF_INET) { // IPv4
+            char ip[INET_ADDRSTRLEN];
+            void* addr_ptr = &((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
+            inet_ntop(AF_INET, addr_ptr, ip, sizeof(ip));
+            g_print("    %s\n",ip);
+
+        }
+        /*else if (family == AF_INET6) { // IPv6 (optional)
+            char ip6[INET6_ADDRSTRLEN];
+            void* addr_ptr = &((struct sockaddr_in6 *)ifa->ifa_addr)->sin6_addr;
+            inet_ntop(AF_INET6, addr_ptr, ip6, sizeof(ip6));
+            std::cout << "Interface: " << ifa->ifa_name << " | IPv6: " << ip6 << std::endl;
+        }*/
+    }
+
+    freeifaddrs(interfaces);
+}
 
 int main(int argc, char *argv[]) {
     try {
@@ -59,8 +100,12 @@ int main(int argc, char *argv[]) {
         g_object_unref(mounts);
 
         // ---------- Run Server ----------
-        gst_rtsp_server_attach(server, NULL);
-        g_print("RTSP stream with auth ready at rtsp://admin:password@<IP>:8554/webcam\n");
+        guint res = gst_rtsp_server_attach(server, NULL);
+        g_print("RTSP stream with auth ready at rtsp://admin:password@<IP>:8554/webcam %d \n",res);
+        g_print("RTSP server IPs :\n");
+        m_GetIPaddress();
+
+        //g_print("Press Ctrl+C to close/terminate");
 
         GMainLoop *loop = g_main_loop_new(NULL, FALSE);
         g_main_loop_run(loop);
@@ -70,7 +115,9 @@ int main(int argc, char *argv[]) {
     }
     catch(QException &exp)
     {
-        qDebug()<< "Exception found !" << exp.what() ;
+        qDebug() << "Exception found !" << exp.what() ;
+    } catch (...) {
+        qDebug() << "Caught unknown exception.";
     }
 
     return 0;
